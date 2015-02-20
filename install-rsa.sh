@@ -35,6 +35,10 @@ SCY="2015"						# script copyrigth year
 # root/.ssh/know_hosts			700 for root:root
 # /etc/ssh/ssh_config 			PubkeyAuthentication yes
 #								RSAAuthentication yes
+#
+# client ssh rsa too much connect:
+# ssh-add -D
+# ssh -p 2222 -o PubkeyAuthentication=no username@server
 
 # === func used to ask user to answer yes or no, return 1 or 0
 makeachoice()
