@@ -15,9 +15,9 @@ SCN="IRK"   					# script name
 SCD="Install Rsa Key"			# script description
 SCT="Debian"					# script OS Test
 SCC="bash ${0##*/}"				# script call
-SCV="1.000"						# script version
+SCV="1.001"						# script version
 SCO="2015/02/18"				# script date creation
-SCU="2015/02/18"				# script last modification
+SCU="2015/02/23"				# script last modification
 SCA="Marsiglietti Remy (Frogg)"	# script author
 SCM="admin@frogg.fr"			# script author Mail
 SCS="cv.frogg.fr"				# script author Website
@@ -60,6 +60,11 @@ good()
 {
 echo -e "${GOOD}$1${NORM}"
 }
+#echo with "check" result color
+check()
+{
+echo -e "${CHECK}$1${NORM}"
+}
 #echo with "err" result color
 err()
 {
@@ -68,6 +73,7 @@ echo -e "${ERR}$1${NORM}"
 #colors
 NORM="\e[0m"
 GOOD="\e[1m\e[97m\e[42m"	
+CHECK="\e[1m\e[97m\e[43m"
 ERR="\e[1m\e[97m\e[41m"
 	
 # Script begin
@@ -106,20 +112,19 @@ else
 	fi
 fi
 
-
 #Test if ssh server is UP
 check "...Checking if ssh server '${huser}@${hserv}:$hport' is available, please wait..."
-if nc -w5 -z ${srvOriginGit} ${gPort} &> /dev/null;then
+if nc -w5 -z ${hserv} ${hport} &>/dev/null;then
 	good " [ A ] Server Git Origin [${huser}@${hserv}:${hport}] port is opened !"	
 else
-	err " [ A ] Can't access to Server Git Origin Port [${huser}@${hserv}:${hport}], End of the script"
+	err " [ A ] Can't access to Server Git Origin [${huser}@${hserv}:${hport}], End of the script"
 	exit
 fi
 
 # Ask if info are correct
 makeachoice "create RSA connexion to '${huser}@${hserv}:$hport'"
 if [ $? = 0 ]; then
-	echo " [ A ] End of the script, aborted by user"
+	check " [ A ] End of the script, aborted by user"
 	exit
 fi
 
@@ -131,7 +136,16 @@ ssh-keygen -t rsa
 # SEND RSA KEY
 good "send your RSA key to $hserv  ( step 2/$nbAct )"
 # copy the public key to server account .ssh path (same as ssh-copy-id but work anywhere)
-ssh-copy-id -i ~/.ssh/id_rsa.pub "-p $hport ${huser}@${hserv}"
+if ssh-copy-id -i ~/.ssh/id_rsa.pub -p $hport ${huser}@${hserv} &> /dev/null;then
+	good "rsa key has been sent to ${hserv}"
+else
+	if ssh-copy-id -i ~/.ssh/id_rsa.pub "-p $hport ${huser}@${hserv}" &> /dev/null;then
+		good "rsa key has been sent to ${hserv}"
+	else
+		err "cannot send rsa key to ${hserv}, End of the script ..."
+		exit
+	fi
+fi
 #cat ~/.ssh/id_rsa.pub | ssh -p $hport ${huser}@${hserv} 'cat >> /root/.ssh/authorized_keys'
 
 # SET CLIENT RSA PASSPHRASE AUTH
